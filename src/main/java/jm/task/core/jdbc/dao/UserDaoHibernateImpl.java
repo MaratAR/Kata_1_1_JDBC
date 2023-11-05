@@ -3,7 +3,6 @@ package jm.task.core.jdbc.dao;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -26,10 +25,10 @@ public class UserDaoHibernateImpl implements UserDao {
         try (Session session = sessionFactory.openSession()){
             transaction = session.beginTransaction();
             session.createNativeQuery("CREATE TABLE IF NOT EXISTS users" +
-                            "(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), last_name VARCHAR(255), age INT)")
+                            "(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), last_name VARCHAR(255), age TINYINT)")
                     .executeUpdate();
             transaction.commit();
-        } catch (HibernateException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (transaction != null) {
                 transaction.rollback();
@@ -44,7 +43,7 @@ public class UserDaoHibernateImpl implements UserDao {
             transaction = session.beginTransaction();
             session.createNativeQuery("DROP TABLE IF EXISTS users").executeUpdate();
             transaction.commit();
-        } catch (HibernateException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (transaction != null) {
                 transaction.rollback();
@@ -59,7 +58,7 @@ public class UserDaoHibernateImpl implements UserDao {
             transaction = session.beginTransaction();
             session.save(new User(name, lastName, age));
             transaction.commit();
-        } catch (HibernateException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (transaction != null) {
                 transaction.rollback();
@@ -74,7 +73,7 @@ public class UserDaoHibernateImpl implements UserDao {
             transaction = session.beginTransaction();
             session.delete(session.get(User.class, id));
             transaction.commit();
-        } catch (HibernateException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (transaction != null) {
                 transaction.rollback();
@@ -90,7 +89,7 @@ public class UserDaoHibernateImpl implements UserDao {
             criteriaQuery.from(User.class);
             userList = session.createQuery(criteriaQuery).getResultList();
             return userList;
-        } catch (HibernateException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return userList;
@@ -98,12 +97,16 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
+        Transaction transaction = null;
         try (Session session = sessionFactory.openSession()){
-            Transaction transaction = session.beginTransaction();
+            transaction = session.beginTransaction();
             session.createNativeQuery("DELETE FROM users").executeUpdate();
             transaction.commit();
-        } catch (HibernateException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            if (transaction != null) {
+                transaction.rollback();
+            }
         }
     }
 }
